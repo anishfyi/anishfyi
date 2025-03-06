@@ -1,4 +1,5 @@
 Hello I'm Anish! 
-- <b>MTS-2 @ Fyle Technologies Pvt Ltd</b>.
-- Experienced in C++ with Data Structures and Algorithms.
-- Comfortable with Git, Typescript, Javascript, Angular, Python, Django, PostgreSQL.
+- <b>Software Engineer with 2+ years of full time experience.</b>.
+- Experienced in Angular and Typescript.
+- Handson with Git, Javascript, Python, Django, PostgreSQL.
+- Exploring Gen AI use cases, wrt Tech and Product Management.
