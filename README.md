@@ -1,5 +1,12 @@
-Hello I'm Anish! 
-- <b>Software Engineer with 2+ years of full time experience.</b>
-- Experienced in Frontend Development(Angular, React, Next) and Typescript/Javascript.
-- Handson with Django, PostgreSQL.
-- WorkEx Contribution Highlights [@fylein](https://github.com/fylein): https://github.com/anishfyle
+# 👋 Hi, I'm Anish!
+
+I'm a **Software Engineer** with **2+ years of professional experience**, specializing in:
+
+- **Frontend Development**: Angular, React, Next.js  
+- **Programming Languages**: TypeScript, JavaScript  
+- **Backend & Database**: Django, PostgreSQL  
+- **Testing Frameworks**: Jasmine, Karma, Cypress, Pytest
+
+### 🔧 Recent Work
+
+Check out my contributions at **Fyle Inc** 👉 [@anishfyle](https://github.com/anishfyle)
