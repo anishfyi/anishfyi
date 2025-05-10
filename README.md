@@ -18,7 +18,3 @@ Check out my contributions at **Fyle Inc** 🔗 [@anishfyle](https://github.com/
 ### 🌐 Portfolio
 
 Explore my portfolio here 🌍 [anishfyi.github.io](https://anishfyi.github.io)
-
----
-
-Thanks for visiting! Feel free to explore more of my work and connect.
