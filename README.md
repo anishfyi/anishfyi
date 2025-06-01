@@ -2,10 +2,10 @@
 
 I'm a **Software Engineer** with **2+ years of professional experience**, specializing in:
 
-- 💻 **Frontend Development**: Angular, React, Next.js  
-- 🧠 **Programming Languages**: TypeScript, JavaScript, Python, C++ 
-- 🛠️ **Backend & Database**: Django, PostgreSQL  
-- 🧪 **Testing Frameworks**: Jasmine, Karma, Cypress, Pytest
+- 🛠️ **Backend & Database**: Django, PostgreSQL
+- 💻 **Frontend Development**: Angular, React 
+- 🧠 **Programming Languages**: Python, TypeScript, JavaScript
+- 🧪 **Testing Frameworks**: Pytest, Jasmine, Karma, Cypress
 
 ---
 
