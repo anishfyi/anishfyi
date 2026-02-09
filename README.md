@@ -1,6 +1,6 @@
 # 👋 Hi, I'm Anish!
 
-I'm a **Software Engineer** with **2+ years of professional experience**, specializing in:
+I'm a **Software Engineer** with **3.5 years of professional experience**, specializing in:
 
 - 🛠️ **Backend & Database**: Django, PostgreSQL
 - 💻 **Frontend Development**: Angular, React 
