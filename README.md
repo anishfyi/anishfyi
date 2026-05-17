@@ -1,17 +1,10 @@
 # 👋 Hi, I'm Anish!
 
-I'm a **Software Engineer** with **3.5 years of professional experience**, specializing in:
+I'm a **Software Engineer - Backend** with **3.5 years of professional experience**, specializing in:
 
-- 🛠️ **Backend & Database**: Django, PostgreSQL
-- 💻 **Frontend Development**: Angular, React 
-- 🧠 **Programming Languages**: Python, TypeScript, JavaScript
-- 🧪 **Testing Frameworks**: Pytest, Jasmine, Karma, Cypress
-
----
-
-### 🔧 Recent Work
-
-Check out my contributions at **Fyle Inc** 🔗 [@anishfyle](https://github.com/anishfyle)
+- 🛠️ **Backend & Database**: Django, FastAPI, PostgreSQL
+- 🧠 **Programming Languages**: Python, TypeScript, C++
+- 🧪 **Testing Frameworks**: Pytest
 
 ---
 
