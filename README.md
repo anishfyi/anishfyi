@@ -4,8 +4,7 @@ I'm a **Software Engineer - Backend** with **4 years of professional experience*
 
 - 🛠️ **Backend & Database**: Django, FastAPI, PostgreSQL
 - 🧠 **Programming Languages**: Python, TypeScript, C++
-- 🧪 **AI Tooling**: Claude Code
-- 
+- 🧪 **AI Tooling**: Claude Code, Semantic Layers
 
 ---
 
