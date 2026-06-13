@@ -1,10 +1,11 @@
 # 👋 Hi, I'm Anish!
 
-I'm a **Software Engineer - Backend** with **3.5 years of professional experience**, specializing in:
+I'm a **Software Engineer - Backend** with **4 years of professional experience**, specializing in:
 
 - 🛠️ **Backend & Database**: Django, FastAPI, PostgreSQL
 - 🧠 **Programming Languages**: Python, TypeScript, C++
-- 🧪 **Testing Frameworks**: Pytest
+- 🧪 **AI Tooling**: Claude Code
+- 
 
 ---
 
