@@ -2,7 +2,7 @@
 
 I'm a **Backend Software Engineer** with **4 years of experience** building backend systems and AI agents that automate real operational workflows.
 
-- 🧪 **AI Tooling**: Claude Code, semantic layers, and agent-based automation
+- 🧪 **AI Tooling**: Claude Code & Harness Engineering, Semantic Layers, and agentic automation.
 - 🛠️ **Backend**: Django, FastAPI, PostgreSQL
 - 🧠 **Languages**: Python, TypeScript, C++
 
