@@ -10,4 +10,4 @@ I'm a **Backend Software Engineer** with **4 years of experience** building back
 
 ### 🌐 Portfolio
 
-Explore my work here 🌍 [anishfyi.github.io](https://anishfyi.github.io)
+Explore my work here 🌍 [anishfyi.com](https://anishfyi.com)
