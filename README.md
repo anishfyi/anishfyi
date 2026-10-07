@@ -4,7 +4,8 @@ I'm a **Backend Software Engineer** with **4 years of experience** building back
 
 - 🧪 **AI Tooling**: Claude Code & Harness Engineering, Semantic Layers, and agentic automation.
 - 🛠️ **Backend**: Django, FastAPI, PostgreSQL
-- 🧠 **Languages**: Python, TypeScript, C++ (learning rust too!!!)
+- 🍎 **Apple Platforms**: Shipped apps for macOS and iOS
+- 🧠 **Languages**: Python, TypeScript, Swift, C++ (learning rust too!!!)
 
 ---
 
