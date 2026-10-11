@@ -1,4 +1,49 @@
-# 👋 Hi, I'm Anish!
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="header/top-dark.svg">
+  <img src="header/top-light.svg" alt="Anish Kr Singh, readme.md" width="100%" height="20" align="left">
+</picture>
+<a href="https://anishfyi.com">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="header/link-website-dark.svg">
+    <img src="header/link-website-light.svg" alt="Visit my website" width="110" height="18" align="left">
+  </picture>
+</a>
+<img src="data:null;," width="100%" height="0" align="left" alt="">
+<a href="https://velofy.co">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="header/link-velofy-dark.svg">
+    <img src="header/link-velofy-light.svg" alt="Visit Velofy, my applied AI lab" width="110" height="18" align="left">
+  </picture>
+</a>
+<img src="data:null;," width="100%" height="0" align="left" alt="">
+<a href="https://www.linkedin.com/in/anishfyi">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="header/link-linkedin-dark.svg">
+    <img src="header/link-linkedin-light.svg" alt="Visit my LinkedIn profile" width="110" height="18" align="left">
+  </picture>
+</a>
+<img src="data:null;," width="100%" height="0" align="left" alt="">
+<a href="https://x.com/anishfyi">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="header/link-x-dark.svg">
+    <img src="header/link-x-light.svg" alt="Visit my X profile" width="110" height="18" align="left">
+  </picture>
+</a>
+<img src="data:null;," width="100%" height="0" align="left" alt="">
+<a href="https://cal.com/anishfyi">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="header/link-call-dark.svg">
+    <img src="header/link-call-light.svg" alt="Book a call with me" width="110" height="18" align="left">
+  </picture>
+</a>
+<img src="data:null;," width="100%" height="0" align="left" alt="">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="header/main-dark.svg">
+  <img src="header/main-light.svg" alt="I'm Anish. A backend and applied AI engineer in Gurugram, building the tools AI agents are missing and shipping them in the open. Below it, three years of my GitHub contributions." width="100%" height="290" align="left">
+</picture>
+<br clear="left">
+
+### 🧰 What I work on
 
 I'm a **Backend Software Engineer** with **4 years of experience** building backend systems and AI agents that automate real operational workflows.
 
@@ -6,12 +51,6 @@ I'm a **Backend Software Engineer** with **4 years of experience** building back
 - 🛠️ **Backend**: Django, FastAPI, PostgreSQL
 - 🍎 **Apple Platforms**: Shipped apps for macOS and iOS
 - 🧠 **Languages**: Python, TypeScript, Swift, C++ (learning rust too!!!)
-
----
-
-### 🌐 Portfolio
-
-Explore my work here 🌍 [anishfyi.com](https://anishfyi.com)
 
 ---
 

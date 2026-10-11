@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" width="100%" height="20"><foreignObject width="100%" height="100%"><div xmlns="http://www.w3.org/1999/xhtml"><style>:root { --color-text: #365d3f; --color-shine: rgb(255 255 255 / 0.55); --color-dot-border: rgb(0 0 0 / 0.05); --color-dot-0: #ecefea; --color-dot-1: #c5d5c0; --color-dot-2: #8fae8c; --color-dot-3: #5f8564; --color-dot-4: #365d3f; }
+:root {
+  --default-delay: 0.6s;
+  --default-duration: 1.4s;
+  --default-stagger: 0.1s;
+  --menu-delay: calc(var(--default-delay) + var(--default-stagger) * 0);
+  --links-delay: calc(var(--default-delay) + var(--default-stagger) * 1);
+  --count-delay: calc(var(--default-delay) + var(--default-stagger) * 5);
+  --readme-delay: calc(var(--default-delay) + var(--default-stagger) * 6);
+  --copy-delay: calc(var(--default-delay) + var(--default-stagger) * 7);
+  --graph-delay: calc(var(--default-delay) + var(--default-stagger) * 17);
+}
+*, *::before, *::after { box-sizing: border-box; }
+p { margin: 0; }
+.grid { display: grid; grid-template-columns: repeat(6, 1fr); }
+.wrapper {
+  contain: strict;
+  block-size: calc(var(--size-height) * 1px);
+  container-type: inline-size;
+  position: relative;
+  overflow: clip;
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+  color: var(--color-text);
+}
+.label { font-size: 14px; font-weight: 600; }
+.link { font-size: 14px; display: flex; gap: 4px; }
+.fade-in {
+  animation: fade-in var(--duration, var(--default-duration)) var(--ease, ease-out)
+    var(--delay, var(--default-delay)) both;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.shine {
+  background-color: var(--color-text);
+  background-image: linear-gradient(-75deg, transparent 0%, var(--color-shine) 15%, transparent 25%);
+  background-size: 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 14s infinite;
+}
+@keyframes shine { 0% { background-position: 200%; } 10%, 100% { background-position: 0%; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; }
+}
+
+:root { --size-height: 20; }
+.wrapper { align-items: center; }
+.menu { --delay: var(--menu-delay); grid-area: 1 / 1 / span 1 / span 3; }
+.count { --delay: var(--count-delay); grid-area: 1 / 4 / span 1 / span 2; display: none; }
+.readme { --delay: var(--readme-delay); grid-area: 1 / 4 / span 1 / span 3; text-align: right; }
+@container (width > 550px) {
+  .count { display: block; grid-area: 1 / 3 / span 1 / span 2; }
+  .readme { grid-area: 1 / 5 / span 1 / span 2; }
+}
+@container (width > 700px) {
+  .count { grid-area: 1 / 4 / span 1 / span 2; }
+  .readme { grid-area: 1 / 6 / span 1 / span 1; }
+}
+</style><div class="wrapper grid label"><div class="menu fade-in">Anish Kr Singh</div><div class="count fade-in"><span class="shine">6.9k</span> Contributions</div><div class="readme fade-in">readme.md</div></div></div></foreignObject></svg>
