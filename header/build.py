@@ -472,7 +472,7 @@ def build(today: dt.date | None = None) -> None:
         (OUT / f"hero-{theme}.svg").write_text(hero(theme))
         for index, (slug, label) in enumerate(LINKS):
             (OUT / f"link-{slug}-{theme}.svg").write_text(link(theme, index, slug, label))
-        (OUT / f"graph-{theme}.svg").write_text(graph(theme, today, start, count, levels))
+        (OUT / f"graph-year-{theme}.svg").write_text(graph(theme, today, start, count, levels))
         for index, (slug, title) in enumerate(SECTIONS, 1):
             (OUT / f"section-{slug}-{theme}.svg").write_text(section(theme, index, title))
     keep = {f"section-{slug}-{theme}.svg" for slug, _ in SECTIONS for theme in THEMES}
