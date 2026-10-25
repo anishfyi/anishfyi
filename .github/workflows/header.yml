@@ -1,6 +1,8 @@
 name: Refresh README header
 
 # Redraws the header SVGs once a day so the contribution graph and count stay current.
+# The build fetches its fonts from velofy.co and jsDelivr and falls back to the copies
+# embedded in the last build, so a host being down never fails the refresh.
 on:
   schedule:
     - cron: "17 1 * * *"

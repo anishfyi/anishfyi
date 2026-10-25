@@ -1,10 +1,25 @@
-"""Build the animated README header for github.com/anishfyi.
+"""Build the README header for github.com/anishfyi.
 
-Each section of the header is its own SVG. Inside every SVG is a <foreignObject>
-holding plain HTML and CSS, so the layout can use grid, container queries and
-CSS animation, and still render through GitHub's image proxy. Every section is
-written twice, once per colour scheme, and README.md picks between them with
-<picture> and prefers-color-scheme.
+The header reads as one panel in the Foundry style of velofy.co: a black ground
+in dark mode and warm paper in light mode, cream text, one gold accent, Switzer
+at regular weight and Fragment Mono for small labels. It is a stack of SVG files:
+
+    hero      the name set large, a mono label row and a short intro
+    link-*    six text links with arrows, three to a row
+    graph     three years of contributions as gold cells at rising opacity
+
+Each SVG holds a <foreignObject> with plain HTML and CSS and is written twice,
+once per colour scheme; README.md picks one with <picture> and
+prefers-color-scheme. The images sit inline with align="top" rather than
+floated, because GitHub pads floated README images by 20px, which would cut
+gaps into the panel.
+
+GitHub serves README images as <img>, which cannot load anything external, so
+the fonts are embedded as base64 data URIs. They are fetched at build time and
+never committed as font files: Switzer from velofy.co (ITF Free Font License,
+embedded unmodified for the owner's own use) and Fragment Mono from the jsDelivr
+CDN (SIL Open Font License). If a fetch fails, the copy embedded by the previous build is
+reused, so the daily refresh does not depend on either host being up.
 
 The contribution graph is real: it is read from the GitHub GraphQL API. Run with
 a token in GITHUB_TOKEN (the scheduled workflow passes its own):
@@ -16,44 +31,67 @@ Only the standard library is used, so the workflow needs no install step.
 
 from __future__ import annotations
 
+import base64
 import datetime as dt
+import functools
 import html
 import json
 import os
 import pathlib
+import re
 import urllib.request
 
 LOGIN = "anishfyi"
 OUT = pathlib.Path(__file__).resolve().parent
 YEARS_SHOWN = 3
 
-INTRO = (
-    "I'm Anish. A backend and applied AI engineer in Gurugram, building the "
-    "tools AI agents are missing and shipping them in the open."
-)
+# The README column on a profile page is about 830px wide. Paddings are fractions
+# of the panel width so every piece lines up at any width; text stays in px.
+DESIGN_WIDTH = 830
+PAD = 32 / DESIGN_WIDTH
+COLUMN_GAP = 16 / DESIGN_WIDTH
 
-# Link buttons, in the order they stack down the left of the header.
+NAME = "Anish Kr Singh"
+INTRO = (
+    "I build backend systems and tools for artificial intelligence (AI), and I "
+    "co-founded Velofy, an applied AI and security lab in Delhi."
+)
+LABEL_LEFT = "README.MD"
+LABEL_RIGHT = "Gurugram, India"
+
+# (slug, label). Three to a row; README.md holds the matching links.
 LINKS = [
-    ("website", "Website"),
+    ("site", "anishfyi.com"),
     ("velofy", "Velofy"),
     ("linkedin", "LinkedIn"),
     ("x", "X"),
     ("call", "Book a call"),
+    ("email", "Email"),
 ]
 
-# Sage, taken from anishfyi.com: --accent is #bdcfb4 on dark and #365d3f on light.
+# README.md declares these heights (and GRAPH_HEIGHT) on its <img> tags; keep them in step.
+HERO_HEIGHT = 290
+LINK_HEIGHT = 52
+
+# Foundry tokens from velofy.co. Contribution cells are the accent at rising opacity.
 THEMES = {
-    "light": {
-        "text": "#365d3f",
-        "dots": ["#ecefea", "#c5d5c0", "#8fae8c", "#5f8564", "#365d3f"],
-        "border": "rgb(0 0 0 / 0.05)",
-        "shine": "rgb(255 255 255 / 0.55)",
-    },
     "dark": {
-        "text": "#bdcfb4",
-        "dots": ["#161b1a", "#26352b", "#43604a", "#7e9c7a", "#bdcfb4"],
-        "border": "rgb(255 255 255 / 0.03)",
-        "shine": "rgb(255 255 255 / 0.5)",
+        "paper": "#000000",
+        "ink": "#e6dec7",
+        "muted": "#9c9686",
+        "accent": "#c8ad86",
+        "line": "#2f2c27",
+        "cell": "200 173 134",
+        "levels": [0.14, 0.34, 0.56, 0.78, 1.0],
+    },
+    "light": {
+        "paper": "#f5efe0",
+        "ink": "#17140e",
+        "muted": "#5f5849",
+        "accent": "#765a33",
+        "line": "#d6ccb4",
+        "cell": "118 90 51",
+        "levels": [0.1, 0.3, 0.52, 0.76, 1.0],
     },
 }
 
@@ -65,9 +103,32 @@ LEVELS = {
     "FOURTH_QUARTILE": 4,
 }
 
-FONT = (
-    '-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,'
-    'sans-serif,"Apple Color Emoji","Segoe UI Emoji"'
+FONTS = {
+    "switzer-400": ("Switzer", 400, "https://velofy.co/fonts/switzer/switzer-400.woff2"),
+    "switzer-500": ("Switzer", 500, "https://velofy.co/fonts/switzer/switzer-500.woff2"),
+    "mono": (
+        "Fragment Mono",
+        400,
+        "https://cdn.jsdelivr.net/npm/@fontsource/fragment-mono@5.2.8/files/"
+        "fragment-mono-latin-400-normal.woff2",
+    ),
+}
+
+SANS = 'Switzer,"Helvetica Neue",Arial,sans-serif'
+MONO = '"Fragment Mono",ui-monospace,Menlo,monospace'
+
+# The Velofy "module V" mark, viewBox 0 0 100 100 (velofyMarkPath in the site's brand.mjs).
+VELOFY_MARK = (
+    "M43.62 84.6Q41.6 84.6 41.6 82.58L41.6 72.9Q41.6 70.89 40.18 69.46L38.93 68.22Q37.51 66.79 "
+    "35.49 66.79L25.82 66.79Q23.8 66.79 23.8 64.78L23.8 46.71Q23.8 44.69 22.38 43.27L21.13 42.02Q19.71 "
+    "40.6 17.69 40.6L8.02 40.6Q6 40.6 6 38.58L6 17.42Q6 15.4 8.02 15.4L20.78 15.4Q22.79 15.4 22.79 "
+    "17.42L22.79 35.49Q22.79 37.51 24.22 38.93L25.46 40.18Q26.89 41.6 28.9 41.6L38.58 41.6Q40.6 41.6 "
+    "40.6 43.62L40.6 61.69Q40.6 63.71 42.02 65.13L43.27 66.38Q44.69 67.8 46.71 67.8L53.29 67.8Q55.31 "
+    "67.8 56.73 66.38L57.98 65.13Q59.4 63.71 59.4 61.69L59.4 43.62Q59.4 41.6 61.42 41.6L71.1 41.6Q73.11 "
+    "41.6 74.54 40.18L75.78 38.93Q77.21 37.51 77.21 35.49L77.21 17.42Q77.21 15.4 79.22 15.4L91.98 "
+    "15.4Q94 15.4 94 17.42L94 38.58Q94 40.6 91.98 40.6L82.31 40.6Q80.29 40.6 78.87 42.02L77.62 "
+    "43.27Q76.2 44.69 76.2 46.71L76.2 64.78Q76.2 66.79 74.18 66.79L64.51 66.79Q62.49 66.79 61.07 "
+    "68.22L59.82 69.46Q58.4 70.89 58.4 72.9L58.4 82.58Q58.4 84.6 56.38 84.6L43.62 84.6Z"
 )
 
 
@@ -110,8 +171,8 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
 """
 
 
-def fetch(today: dt.date) -> tuple[int, list[tuple[int, list[tuple[dt.date, int]]]]]:
-    """Return the all-time total and, per shown year, its days newest first."""
+def fetch(today: dt.date) -> tuple[int, int, list[tuple[int, int, dict[dt.date, int]]]]:
+    """Return the all-time total, the first year, and per shown year its total and levels."""
     years = graphql(YEARS_QUERY, {"login": LOGIN})["user"]["contributionsCollection"][
         "contributionYears"
     ]
@@ -126,228 +187,248 @@ def fetch(today: dt.date) -> tuple[int, list[tuple[int, list[tuple[dt.date, int]
         )["user"]["contributionsCollection"]["contributionCalendar"]
         total += calendar["totalContributions"]
         if len(shown) < YEARS_SHOWN:
-            days = [
-                (dt.date.fromisoformat(day["date"]), LEVELS[day["contributionLevel"]])
+            levels = {
+                dt.date.fromisoformat(day["date"]): LEVELS[day["contributionLevel"]]
                 for week in calendar["weeks"]
                 for day in week["contributionDays"]
-            ]
-            days = [d for d in days if d[0].year == year and d[0] <= today]
-            days.sort(reverse=True)
-            shown.append((year, days))
-    return total, shown
+            }
+            levels = {d: v for d, v in levels.items() if d.year == year and d <= today}
+            shown.append((year, calendar["totalContributions"], levels))
+    return total, min(years), shown
+
+
+# ---------------------------------------------------------------- fonts
+
+
+@functools.cache
+def font_base64(key: str) -> str:
+    _, _, url = FONTS[key]
+    try:
+        request = urllib.request.Request(url, headers={"User-Agent": "anishfyi-readme-header"})
+        with urllib.request.urlopen(request, timeout=30) as response:
+            data = response.read()
+        if data[:4] == b"wOF2":
+            return base64.b64encode(data).decode()
+    except OSError:
+        pass
+    # The host is down or changed: reuse the copy the previous build embedded.
+    pattern = re.compile(r"/\*font:" + re.escape(key) + r"\*/[^}]*?base64,([A-Za-z0-9+/=]+)")
+    for path in sorted(OUT.glob("*.svg")):
+        match = pattern.search(path.read_text())
+        if match:
+            return match.group(1)
+    raise SystemExit(f"Could not load the {key} font from {url} or a previous build")
+
+
+def font_face(key: str) -> str:
+    family, weight, _ = FONTS[key]
+    return (
+        f"/*font:{key}*/@font-face{{font-family:\"{family}\";font-weight:{weight};"
+        f"font-style:normal;font-display:block;"
+        f"src:url(data:font/woff2;base64,{font_base64(key)}) format(\"woff2\")}}"
+    )
 
 
 # ---------------------------------------------------------------- svg
 
-
-BASE_CSS = """
-:root {
-  --default-delay: 0.6s;
-  --default-duration: 1.4s;
-  --default-stagger: 0.1s;
-  --menu-delay: calc(var(--default-delay) + var(--default-stagger) * 0);
-  --links-delay: calc(var(--default-delay) + var(--default-stagger) * 1);
-  --count-delay: calc(var(--default-delay) + var(--default-stagger) * 5);
-  --readme-delay: calc(var(--default-delay) + var(--default-stagger) * 6);
-  --copy-delay: calc(var(--default-delay) + var(--default-stagger) * 7);
-  --graph-delay: calc(var(--default-delay) + var(--default-stagger) * 17);
-}
-*, *::before, *::after { box-sizing: border-box; }
-p { margin: 0; }
-.grid { display: grid; grid-template-columns: repeat(6, 1fr); }
-.wrapper {
-  contain: strict;
-  block-size: calc(var(--size-height) * 1px);
-  container-type: inline-size;
-  position: relative;
-  overflow: clip;
-  font-family: FONT;
-  color: var(--color-text);
-}
-.label { font-size: 14px; font-weight: 600; }
-.link { font-size: 14px; display: flex; gap: 4px; }
-.fade-in {
-  animation: fade-in var(--duration, var(--default-duration)) var(--ease, ease-out)
-    var(--delay, var(--default-delay)) both;
-}
-@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-.shine {
-  background-color: var(--color-text);
-  background-image: linear-gradient(-75deg, transparent 0%, var(--color-shine) 15%, transparent 25%);
-  background-size: 200%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: shine 14s infinite;
-}
-@keyframes shine { 0% { background-position: 200%; } 10%, 100% { background-position: 0%; } }
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; }
-}
-""".replace("FONT", FONT)
+BASE_CSS = f"""
+*,*::before,*::after{{box-sizing:border-box;margin:0;padding:0}}
+.root{{width:100%;height:100%;container-type:inline-size}}
+.panel{{position:relative;width:100%;height:100%;overflow:hidden;background:var(--paper);
+  color:var(--ink);font:400 16px/1.3 {SANS};-webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;text-rendering:geometricPrecision}}
+.mono{{font:400 12px/1 {MONO};letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;color:var(--muted)}}
+.gold{{color:var(--accent)}}
+.in{{animation:in 1.2s cubic-bezier(.2,.7,.2,1) var(--d,0s) both}}
+@keyframes in{{from{{opacity:0}}to{{opacity:1}}}}
+@media (prefers-reduced-motion:reduce){{*,*::before,*::after{{animation:none!important}}}}
+"""
 
 
-def theme_css(theme: str) -> str:
+def tokens(theme: str) -> str:
     t = THEMES[theme]
-    dots = "".join(f"--color-dot-{i}: {c}; " for i, c in enumerate(t["dots"]))
-    return (
-        f":root {{ --color-text: {t['text']}; --color-shine: {t['shine']}; "
-        f"--color-dot-border: {t['border']}; {dots}}}"
+    cells = "".join(
+        f"--l{i}:rgb({t['cell']} / {alpha});" for i, alpha in enumerate(t["levels"])
     )
+    names = ("paper", "ink", "muted", "accent", "line")
+    return ":root{" + "".join(f"--{k}:{t[k]};" for k in names) + cells + "}"
 
 
-def svg(theme: str, width: str, height: int, css: str, body: str) -> str:
+def svg(theme: str, css: str, body: str, fonts: tuple[str, ...], height: int) -> str:
+    """Wrap HTML in an SVG as wide as its <img> and a fixed number of pixels tall.
+
+    The layout inside responds to the width with container queries. A viewBox that
+    scales the whole picture is avoided: Safari does not scale <foreignObject>
+    content with the viewBox when the SVG is drawn as an image.
+    """
+    faces = "".join(font_face(key) for key in fonts)
     return (
-        f'<svg xmlns="http://www.w3.org/2000/svg" fill="none" width="{width}" height="{height}">'
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="{height}" fill="none">'
         '<foreignObject width="100%" height="100%">'
-        '<div xmlns="http://www.w3.org/1999/xhtml">'
-        f"<style>{theme_css(theme)}{BASE_CSS}{css}</style>{body}"
+        '<div xmlns="http://www.w3.org/1999/xhtml" class="root">'
+        f"<style><![CDATA[{faces}{tokens(theme)}{BASE_CSS}{css}]]></style>{body}"
         "</div></foreignObject></svg>\n"
     )
 
 
-def compact(n: int) -> str:
-    return f"{n / 1000:.1f}k".replace(".0k", "k") if n >= 1000 else str(n)
+def cqw(fraction: float) -> str:
+    return f"{fraction * 100:.4f}cqw"
 
 
-def top(theme: str, total: int) -> str:
-    css = """
-:root { --size-height: 20; }
-.wrapper { align-items: center; }
-.menu { --delay: var(--menu-delay); grid-area: 1 / 1 / span 1 / span 3; }
-.count { --delay: var(--count-delay); grid-area: 1 / 4 / span 1 / span 2; display: none; }
-.readme { --delay: var(--readme-delay); grid-area: 1 / 4 / span 1 / span 3; text-align: right; }
-@container (width > 550px) {
-  .count { display: block; grid-area: 1 / 3 / span 1 / span 2; }
-  .readme { grid-area: 1 / 5 / span 1 / span 2; }
-}
-@container (width > 700px) {
-  .count { grid-area: 1 / 4 / span 1 / span 2; }
-  .readme { grid-area: 1 / 6 / span 1 / span 1; }
-}
-"""
-    body = (
-        '<div class="wrapper grid label">'
-        '<div class="menu fade-in">Anish Kr Singh</div>'
-        f'<div class="count fade-in"><span class="shine">{compact(total)}</span> Contributions</div>'
-        '<div class="readme fade-in">readme.md</div>'
-        "</div>"
-    )
-    return svg(theme, "100%", 20, css, body)
-
-
-def link(theme: str, label: str, index: int) -> str:
+def hero(theme: str) -> str:
+    # At -0.028em tracking the name measures about 6.06em in Switzer, so 6.08 fills
+    # the column on one line with a hair to spare for kerning differences between
+    # browsers. Below 600px it breaks onto two lines at a fixed size instead.
+    first, rest = NAME.split(" ", 1)
     css = f"""
-:root {{ --size-height: 18; }}
-.wrapper {{ display: flex; align-items: center; }}
-.link {{ --delay: calc(var(--links-delay) + var(--default-stagger) * {index}); }}
+.hero{{--pad:{cqw(PAD)};display:flex;flex-direction:column;padding:28px var(--pad) 30px;border-radius:4px 4px 0 0}}
+.bar{{display:flex;justify-content:space-between;gap:16px}}
+.name{{margin:28px 0 0 -.02em;font:400 min(138px, calc((100cqw - 2 * var(--pad)) / 6.08))/.86 {SANS};
+  letter-spacing:-.028em;white-space:nowrap;color:var(--ink)}}
+.name span{{white-space:nowrap}}
+.intro{{margin-top:auto;max-width:30em;font-size:20px;line-height:1.3;letter-spacing:-.01em}}
+@container (width < 600px){{
+  .hero{{padding-top:22px;padding-bottom:22px}}
+  .name{{margin-top:22px;font-size:68px;line-height:.88;white-space:normal}}
+  .intro{{font-size:16px;line-height:1.35}}
+}}
 """
     body = (
-        '<div class="wrapper">'
-        f'<div class="link fade-in"><span class="shine">{html.escape(label)}</span><span>↗</span></div>'
+        '<div class="panel hero">'
+        f'<div class="bar mono in" style="--d:.05s"><span class="gold">{html.escape(LABEL_LEFT)}</span>'
+        f"<span>{html.escape(LABEL_RIGHT)}</span></div>"
+        f'<div class="name in" style="--d:.15s"><span>{html.escape(first)}</span> '
+        f"<span>{html.escape(rest)}</span></div>"
+        f'<p class="intro in" style="--d:.4s">{html.escape(INTRO)}</p>'
         "</div>"
     )
-    return svg(theme, "110", 18, css, body)
+    return svg(theme, css, body, ("switzer-400", "mono"), HERO_HEIGHT)
 
 
-def letters(text: str) -> str:
-    return "".join(
-        f'<span class="fade-in" style="--i: {i};">{html.escape(ch)}</span>'
-        for i, ch in enumerate(text)
-    )
+ARROW = (
+    '<svg xmlns="http://www.w3.org/2000/svg" class="arrow" viewBox="0 0 12 12" aria-hidden="true">'
+    '<path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.35" '
+    'stroke-linecap="round" stroke-linejoin="round"/></svg>'
+)
+MARK = (
+    '<svg xmlns="http://www.w3.org/2000/svg" class="mark" viewBox="0 0 100 100" aria-hidden="true">'
+    f'<path d="{VELOFY_MARK}" fill="currentColor"/></svg>'
+)
 
 
-DOT, GAP, ROWS, LABEL = 16, 4, 7, 20
-GRAPH_HEIGHT = ROWS * DOT + (ROWS - 1) * GAP
-
-
-def year_block(index: int, label: str, days: list[tuple[dt.date, int]]) -> tuple[str, int]:
-    # Newest first. Rows run Saturday (top) to Sunday (bottom) so a column read
-    # top-down walks back through one week; empty slots pad the first column.
-    first = days[0][0]
-    pad = 6 - (first.isoweekday() % 7)
-    cells = ['<div class="dot dot--pad"></div>'] * pad
-    cells += [f'<div class="dot dot--{level}"></div>' for _, level in days]
-    columns = -(-len(cells) // ROWS)
-    width = columns * DOT + (columns - 1) * GAP
-    block = (
-        f'<div class="year" style="--w: {width};">'
-        f'<div class="year__days">{"".join(cells)}</div>'
-        f'<div class="year__label label"><span>{label}</span></div>'
-        "</div>"
-    )
-    return block, width
-
-
-def main(theme: str, today: dt.date, shown) -> str:
-    blocks, widths = [], []
-    for index, (year, days) in enumerate(shown):
-        if not days:
-            continue
-        label = today.strftime("%b %-d, %Y") if index == 0 else str(year)
-        block, width = year_block(index, label, days)
-        blocks.append(block)
-        widths.append(width)
-    year_gap = 24
-    total_width = sum(widths) + year_gap * (len(widths) - 1)
+def link(theme: str, index: int, slug: str, label: str) -> str:
+    # Each cell is a third of the panel. The three text columns share the panel's
+    # padding and a 16px gap, so the column edges line up with the hero and graph.
+    column = (1 - 2 * PAD - 2 * COLUMN_GAP) / 3
+    position = index % 3
+    start = PAD + position * (column + COLUMN_GAP) - position / 3
     css = f"""
-:root {{ --size-height: 290; --dot: {DOT}px; --gap: {GAP}px; }}
-.wrapper {{ align-items: end; grid-template-rows: 1fr auto; row-gap: 20px; }}
-.intro {{ grid-area: 1 / 1 / span 1 / span 6; font-size: 18px; font-weight: 300; line-height: 1.35; }}
-.intro span {{ --duration: 980ms; --delay: calc(var(--copy-delay) + var(--i) * 10ms); }}
-@container (width > 550px) {{ .intro {{ grid-area: 1 / 3 / span 1 / span 4; font-size: 22px; }} }}
-@container (width > 700px) {{ .intro {{ grid-area: 1 / 4 / span 1 / span 3; }} }}
-.graph {{ grid-area: 2 / 1 / span 1 / span 6; --delay: var(--graph-delay); }}
-.years {{
-  display: flex;
-  gap: {year_gap}px;
-  inline-size: {total_width}px;
-  will-change: transform;
-  animation: scroll {30 + total_width * 0.03:.0f}s ease-in-out 3s infinite alternate;
-}}
-@keyframes scroll {{
-  0%, 6% {{ transform: translateX(0); }}
-  94%, 100% {{ transform: translateX(min(0px, calc(100cqw - 100%))); }}
-}}
-.year {{ flex: none; inline-size: calc(var(--w) * 1px); }}
-.year__days {{
-  display: grid;
-  grid-auto-flow: column;
-  grid-template-rows: repeat({ROWS}, var(--dot));
-  grid-auto-columns: var(--dot);
-  gap: var(--gap);
-  block-size: {GRAPH_HEIGHT}px;
-}}
-.year__label {{ block-size: {LABEL}px; display: flex; align-items: end; }}
-.dot {{
-  border: 1px solid var(--color-dot-border);
-  border-radius: 3px;
-}}
-.dot--pad {{ visibility: hidden; }}
-.dot--0 {{ background: var(--color-dot-0); }}
-.dot--1 {{ background: var(--color-dot-1); }}
-.dot--2 {{ background: var(--color-dot-2); }}
-.dot--3 {{ background: var(--color-dot-3); }}
-.dot--4 {{ background: var(--color-dot-4); }}
+.col{{position:absolute;top:0;bottom:0;left:{cqw(start * 3)};width:{cqw(column * 3)};
+  display:flex;align-items:center;gap:5px;border-top:1px solid var(--line);
+  font:500 16px/1 {SANS};letter-spacing:-.01em;white-space:nowrap}}
+.arrow{{width:12px;height:12px;flex:none;margin-top:1px}}
+.mark{{width:15px;height:15px;flex:none;color:var(--accent);margin-right:1px}}
+@container (width < 170px){{.col{{font-size:13px;gap:4px}}.arrow{{width:10px;height:10px}}.mark{{width:12px;height:12px}}}}
 """
+    mark = MARK if slug == "velofy" else ""
     body = (
-        '<main class="wrapper grid">'
-        f'<article class="intro"><p>{letters(INTRO)}</p></article>'
-        f'<article class="graph fade-in"><div class="years">{"".join(blocks)}</div></article>'
-        "</main>"
+        '<div class="panel">'
+        f'<div class="col in" style="--d:{0.5 + index * 0.07:.2f}s">{mark}'
+        f"<span>{html.escape(label)}</span>{ARROW}</div>"
+        "</div>"
     )
-    return svg(theme, "100%", 290, css, body)
+    return svg(theme, css, body, ("switzer-500",), LINK_HEIGHT)
+
+
+# Cells are 80% of the pitch and gaps 20%, so a year of 53 weeks is 52.8 pitches
+# wide and 6.8 pitches tall. The pitch is 10px when there is room and shrinks to
+# fit on narrow screens; the graph keeps the same height either way.
+GRAPH_HEIGHT = 298
+SIDE, LABEL, LABEL_GAP, SIDE_GAP = 164, 48, 18, 24
+
+
+def strip(year: int, levels: dict[dt.date, int]) -> str:
+    # Columns are weeks starting on Sunday, rows run Sunday to Saturday, as on GitHub.
+    first = dt.date(year, 1, 1)
+    cells = ['<i class="x"></i>'] * (first.isoweekday() % 7)
+    cells += [f'<i class="l{levels[day]}"></i>' for day in sorted(levels)]
+    return "".join(cells)
+
+
+def graph(theme: str, today: dt.date, total: int, since: int, shown) -> str:
+    rows = [(year, count, levels) for year, count, levels in shown if levels]
+    label = LABEL + LABEL_GAP
+    css = f"""
+.graph{{--pad:{cqw(PAD)};display:flex;gap:{SIDE_GAP}px;padding:30px var(--pad) 32px;border-radius:0 0 4px 4px}}
+.graph::before{{content:"";position:absolute;top:0;left:var(--pad);right:var(--pad);border-top:1px solid var(--line)}}
+.side{{flex:none;width:{SIDE}px;display:flex;flex-direction:column}}
+.total{{margin-top:14px;font:400 44px/1 {SANS};letter-spacing:-.025em;color:var(--ink)}}
+.since{{margin-top:12px}}
+.foot{{margin-top:auto;display:flex;flex-direction:column;gap:12px}}
+.legend{{display:flex;align-items:center;gap:6px}}
+.legend .cells{{display:flex;gap:2px}}
+.legend i{{width:8px;height:8px;border-radius:2px}}
+.years{{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;
+  --p:min(10px, calc((100cqw - 2 * var(--pad) - {SIDE + SIDE_GAP + label}px) / 52.8))}}
+.year{{display:flex;gap:{LABEL_GAP}px;justify-content:flex-end}}
+.label{{flex:none;width:{LABEL}px;display:flex;flex-direction:column;gap:8px}}
+.days{{flex:none;display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,calc(var(--p) * .8));
+  grid-auto-columns:calc(var(--p) * .8);gap:calc(var(--p) * .2);
+  width:calc(var(--p) * 52.8);height:calc(var(--p) * 6.8);
+  animation:wipe 1.8s cubic-bezier(.3,.6,.2,1) var(--d,0s) both}}
+@keyframes wipe{{from{{clip-path:inset(0 100% 0 0)}}to{{clip-path:inset(0 0 0 0)}}}}
+i{{display:block;border-radius:calc(var(--p) * .22)}}
+.x{{visibility:hidden}}
+.l0{{background:var(--l0)}}.l1{{background:var(--l1)}}.l2{{background:var(--l2)}}
+.l3{{background:var(--l3)}}.l4{{background:var(--l4)}}
+@container (width < 720px){{
+  .graph{{flex-direction:column;gap:18px;padding:24px var(--pad) 26px}}
+  .side{{width:auto;flex-direction:row;align-items:baseline;gap:12px}}
+  .total{{margin:0;font-size:28px}}
+  .since{{margin:0 0 0 auto}}
+  .foot{{display:none}}
+  .years{{justify-content:center;gap:12px;
+    --p:min(8.6px, calc((100cqw - 2 * var(--pad) - {label}px) / 52.8))}}
+  .year{{justify-content:flex-start}}
+}}
+@container (width < 400px){{
+  .side{{flex-direction:column;align-items:flex-start;gap:0}}
+  .total{{margin-top:10px;font-size:36px}}
+  .since{{margin:10px 0 0}}
+}}
+"""
+    years_html = "".join(
+        f'<div class="year"><div class="label in" style="--d:{0.9 + i * 0.15:.2f}s">'
+        f'<span class="mono gold">{year}</span><span class="mono">{count:,}</span></div>'
+        f'<div class="days" style="--d:{0.9 + i * 0.15:.2f}s">{strip(year, levels)}</div></div>'
+        for i, (year, count, levels) in enumerate(rows)
+    )
+    legend = "".join(f'<i class="l{i}"></i>' for i in range(5))
+    body = (
+        '<div class="panel graph">'
+        '<div class="side in" style="--d:.8s">'
+        '<p class="mono gold">Contributions</p>'
+        f'<p class="total">{total:,}</p>'
+        f'<p class="mono since">Since {since}</p>'
+        '<div class="foot">'
+        f'<div class="mono legend">Less<span class="cells">{legend}</span>More</div>'
+        f'<p class="mono">Updated {today.day} {today.strftime("%b %Y")}</p>'
+        "</div></div>"
+        f'<div class="years">{years_html}</div>'
+        "</div>"
+    )
+    return svg(theme, css, body, ("switzer-400", "mono"), GRAPH_HEIGHT)
 
 
 def build(today: dt.date | None = None) -> None:
     today = today or dt.datetime.now(dt.timezone.utc).date()
-    total, shown = fetch(today)
+    total, since, shown = fetch(today)
     for theme in THEMES:
-        (OUT / f"top-{theme}.svg").write_text(top(theme, total))
+        (OUT / f"hero-{theme}.svg").write_text(hero(theme))
         for index, (slug, label) in enumerate(LINKS):
-            (OUT / f"link-{slug}-{theme}.svg").write_text(link(theme, label, index))
-        (OUT / f"main-{theme}.svg").write_text(main(theme, today, shown))
-    print(f"{total} contributions, {len(shown)} years drawn, written to {OUT}")
+            (OUT / f"link-{slug}-{theme}.svg").write_text(link(theme, index, slug, label))
+        (OUT / f"graph-{theme}.svg").write_text(graph(theme, today, total, since, shown))
+    print(f"{total} contributions since {since}, {len(shown)} years drawn, written to {OUT}")
 
 
 if __name__ == "__main__":

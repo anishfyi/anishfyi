@@ -1,81 +1,50 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="header/top-dark.svg">
-  <img src="header/top-light.svg" alt="Anish Kr Singh, readme.md" width="100%" height="20" align="left">
-</picture>
-<a href="https://anishfyi.com">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="header/link-website-dark.svg">
-    <img src="header/link-website-light.svg" alt="Visit my website" width="110" height="18" align="left">
-  </picture>
-</a>
-<img src="data:null;," width="100%" height="0" align="left" alt="">
-<a href="https://velofy.co">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="header/link-velofy-dark.svg">
-    <img src="header/link-velofy-light.svg" alt="Visit Velofy, my applied AI lab" width="110" height="18" align="left">
-  </picture>
-</a>
-<img src="data:null;," width="100%" height="0" align="left" alt="">
-<a href="https://www.linkedin.com/in/anishfyi">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="header/link-linkedin-dark.svg">
-    <img src="header/link-linkedin-light.svg" alt="Visit my LinkedIn profile" width="110" height="18" align="left">
-  </picture>
-</a>
-<img src="data:null;," width="100%" height="0" align="left" alt="">
-<a href="https://x.com/anishfyi">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="header/link-x-dark.svg">
-    <img src="header/link-x-light.svg" alt="Visit my X profile" width="110" height="18" align="left">
-  </picture>
-</a>
-<img src="data:null;," width="100%" height="0" align="left" alt="">
-<a href="https://cal.com/anishfyi">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="header/link-call-dark.svg">
-    <img src="header/link-call-light.svg" alt="Book a call with me" width="110" height="18" align="left">
-  </picture>
-</a>
-<img src="data:null;," width="100%" height="0" align="left" alt="">
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="header/main-dark.svg">
-  <img src="header/main-light.svg" alt="I'm Anish. A backend and applied AI engineer in Gurugram, building the tools AI agents are missing and shipping them in the open. Below it, three years of my GitHub contributions." width="100%" height="290" align="left">
-</picture>
-<br clear="left">
+<div>
+<picture><source media="(prefers-color-scheme: dark)" srcset="header/hero-dark.svg"><img src="header/hero-light.svg" alt="Anish Kr Singh. I build backend systems and tools for artificial intelligence (AI), and I co-founded Velofy, an applied AI and security lab in Delhi. Based in Gurugram, India." width="100%" height="290" align="top"></picture>
+<a href="https://anishfyi.com"><picture><source media="(prefers-color-scheme: dark)" srcset="header/link-site-dark.svg"><img src="header/link-site-light.svg" alt="anishfyi.com" width="33.33%" height="52" align="top"></picture></a><a href="https://velofy.co"><picture><source media="(prefers-color-scheme: dark)" srcset="header/link-velofy-dark.svg"><img src="header/link-velofy-light.svg" alt="Velofy" width="33.33%" height="52" align="top"></picture></a><a href="https://www.linkedin.com/in/anishfyi"><picture><source media="(prefers-color-scheme: dark)" srcset="header/link-linkedin-dark.svg"><img src="header/link-linkedin-light.svg" alt="LinkedIn" width="33.33%" height="52" align="top"></picture></a>
+<a href="https://x.com/anishfyi"><picture><source media="(prefers-color-scheme: dark)" srcset="header/link-x-dark.svg"><img src="header/link-x-light.svg" alt="X" width="33.33%" height="52" align="top"></picture></a><a href="https://cal.com/anishfyi"><picture><source media="(prefers-color-scheme: dark)" srcset="header/link-call-dark.svg"><img src="header/link-call-light.svg" alt="Book a call" width="33.33%" height="52" align="top"></picture></a><a href="mailto:hey@anishfyi.com"><picture><source media="(prefers-color-scheme: dark)" srcset="header/link-email-dark.svg"><img src="header/link-email-light.svg" alt="Email hey@anishfyi.com" width="33.33%" height="52" align="top"></picture></a>
+<picture><source media="(prefers-color-scheme: dark)" srcset="header/graph-dark.svg"><img src="header/graph-light.svg" alt="My GitHub contributions over the last three years, one gold cell per day, darker on busier days. Refreshed daily." width="100%" height="298" align="top"></picture>
+</div>
 
-### 🧰 What I work on
+## What I work on
 
-I'm a **Backend Software Engineer** with **4 years of experience** building backend systems and AI agents that automate real operational workflows.
+I work on backend systems and applied artificial intelligence (AI) at [FableRoom](https://fableroom.com). Before that I spent two and a half years on the integrations team at Fyle.
 
-- 🧪 **AI Tooling**: Claude Code & Harness Engineering, Semantic Layers, and Gource/Whiteboard.
-- 🛠️ **Backend**: Django, FastAPI, PostgreSQL
-- 🍎 **Apple Platforms**: Shipped apps for macOS and iOS
-- 🧠 **Languages**: Python, TypeScript, Swift, C++ (learning rust too!!!)
+At [Velofy](https://velofy.co), the lab I co-founded, we study how models find and fix vulnerabilities and build the tools agents run on.
 
----
+- **AI tooling and harness engineering.** Agent harnesses, context engineering, semantic layers, and plugins for Claude Code.
+- **Backend.** Four years of backend work: Django, FastAPI and PostgreSQL.
+- **Security-minded engineering.** I decide first what a system must never do, then enforce it in more than one place: read-only roles, signature checks on inbound webhooks, and network fingerprints that match a real browser.
+- **Languages.** Python, TypeScript and Rust, plus Swift and C++.
 
-### 🚀 Open source projects
+## Open source
 
-I build in the open. Every project is documented at [velofy.co/open-source](https://velofy.co/open-source/).
+Three of my own repositories. curl_reap and trove have project pages on [anishfyi.com](https://anishfyi.com/projects/).
 
-| Project | What it does | Built with |
+| Project | What it does | Links |
 | --- | --- | --- |
-| [**curl_reap**](https://github.com/anishfyi/curl_reap) | Reap the web: browser-grade Transport Layer Security (TLS) impersonation, self-healing selectors and a concurrent crawl engine in one library. [Docs](https://velofy.co/curl_reap/) | Python |
-| [**Summit.js**](https://github.com/velofy/summitjs) | A rugged, signal-powered framework for composing behavior directly in your HTML. Safe under a strict Content Security Policy (CSP), about 16KB gzipped. [Docs](https://velofy.co/summitjs/) | TypeScript |
-| [**Trove**](https://github.com/anishfyi/trove) | A Claude Code skill that builds and maintains a personal, file-based semantic layer as you work, and reloads it every session. [Docs](https://velofy.co/trove/) | Rust |
-| [**Querion**](https://github.com/anishfyi/querion) | A strictly read-only, natural-language data analyst that runs on the Claude Code command line. Connect Postgres and ask in plain English. Pairs with Trove for an auto-built semantic layer. [Docs](https://velofy.co/querion/) | Python |
-| [**Terbium**](https://github.com/velofy/terbium) | An algorithmic multi-file parser (PDF, PPTX, XLSX, CSV) that scores its own confidence and only reaches for a model when it is genuinely stuck. [Docs](https://velofy.co/terbium/) | Python |
-| [**glep**](https://github.com/velofy/glep) | A command-line code search tool for coding agents: an indexed grep and glob with ripgrep-compatible output and no daemon. [Docs](https://velofy.co/glep/) | Rust |
-| [**Troy**](https://github.com/velofy/troy) | A Chromium desktop browser, built on Electron, that an agent can attach to over the Chrome DevTools Protocol (CDP), inside the session you are already signed into. [Docs](https://velofy.co/troy/) | JavaScript |
-| [**Vaulty**](https://github.com/velofy/vaulty) | A transparent work-in-progress screen lock for macOS. Password to unlock, terminals stay live. [Docs](https://velofy.co/vaulty/) | Swift |
-| [**mac-uninstaller**](https://github.com/velofy/mac-uninstaller) | A fast native macOS app that fully uninstalls apps (bundle and all leftovers) and reclaims space. Trash-only, SwiftUI. [Docs](https://velofy.co/mac-uninstaller/) | Swift |
-| [**Pawse**](https://github.com/velofy/pawse) | The pomeranian that makes you take breaks. [Docs](https://velofy.co/pawse/) | JavaScript |
-| [**classy-fonts**](https://github.com/velofy/classy-fonts) | A cabinet of 324 free typefaces in a live two-tab specimen gallery, split by licence. Gathered with curl_reap. [Docs](https://velofy.co/classy-fonts/) | Python |
-| [**homebrew-tap**](https://github.com/velofy/homebrew-tap) | The Homebrew tap for the desktop apps: `brew tap velofy/tap`. | Ruby |
+| [**curl_reap**](https://github.com/anishfyi/curl_reap) | Python scraping with a browser-exact fingerprint. Its own transport sends a captured browser's Transport Layer Security (TLS) handshake byte for byte, with self-healing selectors and a concurrent crawler on top. | [Page](https://anishfyi.com/projects/curl_reap/), [docs](https://velofy.co/curl_reap/) |
+| [**trove**](https://github.com/anishfyi/trove) | Repository index and session memory for coding agents. A Rust engine indexes a repository into layered summaries, and a Claude Code plugin keeps decisions, gotchas and conventions as plain files. | [Page](https://anishfyi.com/projects/trove/), [docs](https://velofy.co/trove/) |
+| [**querion**](https://github.com/anishfyi/querion) | A read-only analyst for questions about your data. Ask about a Postgres database in plain English and get the number, a table and the Structured Query Language (SQL) it ran. | [Page](https://velofy.co/open-source/querion/), [docs](https://velofy.co/querion/) |
 
----
+Built at Velofy and documented on [velofy.co](https://velofy.co/open-source/):
 
-### 🤝 Open source contributions
+| Project | What it does | Links |
+| --- | --- | --- |
+| [**Troy**](https://velofy.co/open-source/troy/) | A Chromium browser your agent joins, already signed in. An agent attaches over the Chrome DevTools Protocol (CDP) to the tabs you already use. | [Website](https://troy.velofy.co), [docs](https://velofy.co/troy/), [source](https://github.com/velofy/troy) |
+| [**terbium**](https://velofy.co/open-source/terbium/) | Parses documents into rows. It rebuilds the tables in a Portable Document Format (PDF) file from the position of every word, scores its confidence, and sends only the tables it cannot resolve to a model. | [Docs](https://velofy.co/terbium/), [source](https://github.com/velofy/terbium) |
+| [**glep**](https://velofy.co/open-source/glep/) | Indexed grep and glob for coding agents. One trigram index narrows each search to the files that can match, with output byte-compatible with ripgrep and no daemon. | [Docs](https://velofy.co/glep/), [source](https://github.com/velofy/glep) |
+
+## Now at Velofy
+
+- [**Troy**](https://troy.velofy.co): a Chromium browser that agents attach to, inside the session you are already signed into.
+- [**Kestrel**](https://kestrel.velofy.co): sends one coding task to several agents, then a judge picks the diff.
+- [**Agent teardowns**](https://velofy.co/research/papers/): how OpenClaw, Muse, Instinct and dots are built, with architecture diagrams.
+- [**The Bulletin**](https://velofy.co/bulletin/): reviews of the latest AI models, with a scoreboard of independent benchmarks.
+- [**Zero-days found by AI**](https://velofy.co/journal/zero-days-found-by-ai/): new on the journal, a sourced review of the zero-days that AI systems have found.
+
+The lab also makes [Numera](https://numera.velofy.co) and [Whiteboard](https://whiteboard.velofy.co).
+
+## Merged contributions
 
 Pull requests merged into other people's projects.
 
@@ -87,3 +56,20 @@ Pull requests merged into other people's projects.
 | [**svix/svix-webhooks**](https://github.com/svix/svix-webhooks)<br>The open source webhooks service | [#2607](https://github.com/svix/svix-webhooks/pull/2607) | Ruby library: generated models accept the JSON generator state, so they serialize when nested in arrays and objects. |
 | [**robocurve/inspect-robots**](https://github.com/robocurve/inspect-robots)<br>Open source evals for physical AI | [#335](https://github.com/robocurve/inspect-robots/pull/335) | The `capx` plugin passes `-P effort=` to the model exactly as typed, matching the agent plugin, and an invalid value gives a guided error instead of a traceback. |
 | [**nodemaven/nodemaven-python**](https://github.com/nodemaven/nodemaven-python)<br>Python client for the NodeMaven proxy gateway | [#8](https://github.com/nodemaven/nodemaven-python/pull/8) | Quoted the extras install line so the quickstart works in zsh, with a test that fails on the unquoted form. |
+
+## Writing
+
+Selected essays from [anishfyi.com/writings](https://anishfyi.com/writings/).
+
+- [**Why your scraper gets a 403 and your browser does not**](https://anishfyi.com/writings/why-your-scraper-gets-a-403/). The block usually happens in the TLS handshake, before any header is read.
+- [**Parse first, escalate only what you must**](https://anishfyi.com/writings/parse-first-escalate-only-what-you-must/). Rebuilding tables from word geometry, scoring confidence, and sending only the hard pages to a model.
+- [**Building Querion: a Read-Only, Natural-Language Data Analyst**](https://anishfyi.com/writings/querion-read-only-analyst/). Letting a language model query production data without ever letting it write.
+- [**Trove: Giving Claude Code a Persistent Memory**](https://anishfyi.com/writings/trove-persistent-memory-claude-code/). A file-based memory index that reloads into context every session.
+- [**Verifying Inbound Webhooks with HMAC Signatures**](https://anishfyi.com/writings/hmac-webhook-verification/). Why every inbound webhook needs a hash-based message authentication code (HMAC) check, and how to verify one safely in Django.
+- [**Zero-Downtime Database Migrations in Django**](https://anishfyi.com/writings/zero-downtime-migrations/). Shipping schema changes to a live Postgres database without dropped requests.
+
+## Get in touch
+
+For backend and applied AI roles, [book a call](https://cal.com/anishfyi) or write to [hey@anishfyi.com](mailto:hey@anishfyi.com). For Velofy, write to [anish@velofy.co](mailto:anish@velofy.co).
+
+[anishfyi.com](https://anishfyi.com) · [LinkedIn](https://www.linkedin.com/in/anishfyi) · [X](https://x.com/anishfyi)
