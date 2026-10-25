@@ -8,6 +8,9 @@ at regular weight and Fragment Mono for small labels. It is a stack of SVG files
     link-*    six text links with arrows, three to a row
     graph     three years of contributions as gold cells at rising opacity
 
+Every piece is checked from a 278px column (a 360px phone: GitHub's 16px page
+gutters and the profile card's 24px padding come off each side) up to 900px.
+
 Each SVG holds a <foreignObject> with plain HTML and CSS and is written twice,
 once per colour scheme; README.md picks one with <picture> and
 prefers-color-scheme. The images sit inline with align="top" rather than
@@ -278,28 +281,34 @@ def cqw(fraction: float) -> str:
 def hero(theme: str) -> str:
     # At -0.028em tracking the name measures about 6.06em in Switzer, so 6.08 fills
     # the column on one line with a hair to spare for kerning differences between
-    # browsers. Below 600px it breaks onto two lines at a fixed size instead.
+    # browsers. It stops growing at 128px (an 845px column) so the intro keeps its
+    # distance in wider README columns. Below 600px it breaks onto two lines and shrinks with the width, so
+    # the name and a four-line intro still fit the fixed height on a 360px phone
+    # (a 278px README column). The name's bottom margin keeps the intro clear of
+    # the descender in "Singh" when the panel is full.
     first, rest = NAME.split(" ", 1)
     css = f"""
 .hero{{--pad:{cqw(PAD)};display:flex;flex-direction:column;padding:28px var(--pad) 30px;border-radius:4px 4px 0 0}}
 .bar{{display:flex;justify-content:space-between;gap:16px}}
-.name{{margin:28px 0 0 -.02em;font:400 min(138px, calc((100cqw - 2 * var(--pad)) / 6.08))/.86 {SANS};
+.name{{margin:28px 0 16px -.02em;font:400 min(128px, calc((100cqw - 2 * var(--pad)) / 6.08))/.86 {SANS};
   letter-spacing:-.028em;white-space:nowrap;color:var(--ink)}}
-.name span{{white-space:nowrap}}
+.name span,.nw{{white-space:nowrap}}
 .intro{{margin-top:auto;max-width:30em;font-size:20px;line-height:1.3;letter-spacing:-.01em}}
 @container (width < 600px){{
   .hero{{padding-top:22px;padding-bottom:22px}}
-  .name{{margin-top:22px;font-size:68px;line-height:.88;white-space:normal}}
+  .name{{margin-top:20px;font-size:min(68px, 18.5cqw);line-height:.88;white-space:normal}}
   .intro{{font-size:16px;line-height:1.35}}
 }}
 """
+    # Keep "co-founded" whole so a narrow column does not break it at the hyphen.
+    intro = html.escape(INTRO).replace("co-founded", '<span class="nw">co-founded</span>')
     body = (
         '<div class="panel hero">'
         f'<div class="bar mono in" style="--d:.05s"><span class="gold">{html.escape(LABEL_LEFT)}</span>'
         f"<span>{html.escape(LABEL_RIGHT)}</span></div>"
         f'<div class="name in" style="--d:.15s"><span>{html.escape(first)}</span> '
         f"<span>{html.escape(rest)}</span></div>"
-        f'<p class="intro in" style="--d:.4s">{html.escape(INTRO)}</p>'
+        f'<p class="intro in" style="--d:.4s">{intro}</p>'
         "</div>"
     )
     return svg(theme, css, body, ("switzer-400", "mono"), HERO_HEIGHT)
@@ -329,6 +338,8 @@ def link(theme: str, index: int, slug: str, label: str) -> str:
 .arrow{{width:12px;height:12px;flex:none;margin-top:1px}}
 .mark{{width:15px;height:15px;flex:none;color:var(--accent);margin-right:1px}}
 @container (width < 170px){{.col{{font-size:13px;gap:4px}}.arrow{{width:10px;height:10px}}.mark{{width:12px;height:12px}}}}
+@container (width < 100px){{.col{{font-size:12px;gap:3px;letter-spacing:-.02em}}.arrow{{width:9px;height:9px}}.mark{{width:11px;height:11px}}}}
+@container (width < 92px){{.arrow{{display:none}}}}
 """
     mark = MARK if slug == "velofy" else ""
     body = (
@@ -340,11 +351,21 @@ def link(theme: str, index: int, slug: str, label: str) -> str:
     return svg(theme, css, body, ("switzer-500",), LINK_HEIGHT)
 
 
-# Cells are 80% of the pitch and gaps 20%, so a year of 53 weeks is 52.8 pitches
-# wide and 6.8 pitches tall. The pitch is 10px when there is room and shrinks to
-# fit on narrow screens; the graph keeps the same height either way.
+# Each year is a strip of week columns. --p is the pitch (cell plus gap): 10px
+# when there is room, shrinking to fit narrower columns; the graph keeps the same
+# height at every width. Above 720px cells are 80% of the pitch. Below it the
+# cell and gap are rounded to whole pixels, because fractional cells of 3 to 6px
+# blur into stripes; below 400px the year labels move above the strips so each
+# strip gets the full width, and the pitch is capped at 5px so three strips fit.
 GRAPH_HEIGHT = 298
 SIDE, LABEL, LABEL_GAP, SIDE_GAP = 164, 48, 18, 24
+
+
+def weeks(year: int) -> int:
+    """How many week columns the year spans: 53 for most years, 54 for a few."""
+    offset = dt.date(year, 1, 1).isoweekday() % 7
+    days = (dt.date(year + 1, 1, 1) - dt.date(year, 1, 1)).days
+    return -(-(offset + days) // 7)
 
 
 def strip(year: int, levels: dict[dt.date, int]) -> str:
@@ -358,6 +379,8 @@ def strip(year: int, levels: dict[dt.date, int]) -> str:
 def graph(theme: str, today: dt.date, total: int, since: int, shown) -> str:
     rows = [(year, count, levels) for year, count, levels in shown if levels]
     label = LABEL + LABEL_GAP
+    n = max(weeks(year) for year, _, _ in rows)
+    span = n - 0.2  # strip width in pitches: n cells of .8 and n - 1 gaps of .2
     css = f"""
 .graph{{--pad:{cqw(PAD)};display:flex;gap:{SIDE_GAP}px;padding:30px var(--pad) 32px;border-radius:0 0 4px 4px}}
 .graph::before{{content:"";position:absolute;top:0;left:var(--pad);right:var(--pad);border-top:1px solid var(--line)}}
@@ -369,15 +392,15 @@ def graph(theme: str, today: dt.date, total: int, since: int, shown) -> str:
 .legend .cells{{display:flex;gap:2px}}
 .legend i{{width:8px;height:8px;border-radius:2px}}
 .years{{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;
-  --p:min(10px, calc((100cqw - 2 * var(--pad) - {SIDE + SIDE_GAP + label}px) / 52.8))}}
+  --p:min(10px, calc((100cqw - 2 * var(--pad) - {SIDE + SIDE_GAP + label}px) / {span:g}))}}
 .year{{display:flex;gap:{LABEL_GAP}px;justify-content:flex-end}}
 .label{{flex:none;width:{LABEL}px;display:flex;flex-direction:column;gap:8px}}
-.days{{flex:none;display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,calc(var(--p) * .8));
-  grid-auto-columns:calc(var(--p) * .8);gap:calc(var(--p) * .2);
-  width:calc(var(--p) * 52.8);height:calc(var(--p) * 6.8);
+.days{{--c:calc(var(--p) * .8);--g:calc(var(--p) * .2);flex:none;display:grid;grid-auto-flow:column;
+  grid-template-rows:repeat(7,var(--c));grid-auto-columns:var(--c);gap:var(--g);
+  width:calc(var(--c) * {n} + var(--g) * {n - 1});height:calc(var(--c) * 7 + var(--g) * 6);
   animation:wipe 1.8s cubic-bezier(.3,.6,.2,1) var(--d,0s) both}}
 @keyframes wipe{{from{{clip-path:inset(0 100% 0 0)}}to{{clip-path:inset(0 0 0 0)}}}}
-i{{display:block;border-radius:calc(var(--p) * .22)}}
+i{{display:block;border-radius:calc(var(--c) * .28)}}
 .x{{visibility:hidden}}
 .l0{{background:var(--l0)}}.l1{{background:var(--l1)}}.l2{{background:var(--l2)}}
 .l3{{background:var(--l3)}}.l4{{background:var(--l4)}}
@@ -388,13 +411,23 @@ i{{display:block;border-radius:calc(var(--p) * .22)}}
   .since{{margin:0 0 0 auto}}
   .foot{{display:none}}
   .years{{justify-content:center;gap:12px;
-    --p:min(8.6px, calc((100cqw - 2 * var(--pad) - {label}px) / 52.8))}}
+    --p:min(8.6px, calc((100cqw - 2 * var(--pad) - {label}px) / {span:g}))}}
   .year{{justify-content:flex-start}}
 }}
 @container (width < 400px){{
-  .side{{flex-direction:column;align-items:flex-start;gap:0}}
-  .total{{margin-top:10px;font-size:36px}}
-  .since{{margin:10px 0 0}}
+  .graph{{padding:22px var(--pad) 20px}}
+  .side{{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:10px 12px}}
+  .side>.gold{{grid-area:1/1}}
+  .since{{grid-area:1/2;margin:0}}
+  .total{{grid-area:2/1/3/3;font-size:36px}}
+  .years{{--p:min(5px, calc((100cqw - 2 * var(--pad)) / {span:g}))}}
+  .year{{flex-direction:column;gap:6px}}
+  .label{{width:auto;flex-direction:row;gap:10px}}
+}}
+@supports (width:round(down, 5.5px, 1px)){{
+  @container (width < 720px){{
+    .days{{--g:max(1px, round(var(--p) * .2, 1px));--c:round(down, var(--p) - var(--g), 1px)}}
+  }}
 }}
 """
     years_html = "".join(
