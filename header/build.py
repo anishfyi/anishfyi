@@ -6,7 +6,8 @@ at regular weight and Fragment Mono for small labels. It is a stack of SVG files
 
     hero      the name set large, a mono label row and a short intro
     link-*    six text links with arrows, three to a row
-    graph     three years of contributions as gold cells at rising opacity
+    graph     this year's contributions as gold cells at rising opacity, one strip
+    section   the README's section headings: a hairline, a gold title and its number
 
 Every piece is checked from a 278px column (a 360px phone: GitHub's 16px page
 gutters and the profile card's 24px padding come off each side) up to 900px.
@@ -46,7 +47,6 @@ import urllib.request
 
 LOGIN = "anishfyi"
 OUT = pathlib.Path(__file__).resolve().parent
-YEARS_SHOWN = 3
 
 # The README column on a profile page is about 830px wide. Paddings are fractions
 # of the panel width so every piece lines up at any width; text stays in px.
@@ -154,12 +154,6 @@ def graphql(query: str, variables: dict) -> dict:
     return body["data"]
 
 
-YEARS_QUERY = """
-query($login: String!) {
-  user(login: $login) { contributionsCollection { contributionYears } }
-}
-"""
-
 CALENDAR_QUERY = """
 query($login: String!, $from: DateTime!, $to: DateTime!) {
   user(login: $login) {
@@ -174,30 +168,30 @@ query($login: String!, $from: DateTime!, $to: DateTime!) {
 """
 
 
-def fetch(today: dt.date) -> tuple[int, int, list[tuple[int, int, dict[dt.date, int]]]]:
-    """Return the all-time total, the first year, and per shown year its total and levels."""
-    years = graphql(YEARS_QUERY, {"login": LOGIN})["user"]["contributionsCollection"][
-        "contributionYears"
-    ]
-    total = 0
-    shown = []
-    for year in sorted(years, reverse=True):
-        start = dt.datetime(year, 1, 1)
-        end = dt.datetime(year, 12, 31, 23, 59, 59)
-        calendar = graphql(
-            CALENDAR_QUERY,
-            {"login": LOGIN, "from": start.isoformat() + "Z", "to": end.isoformat() + "Z"},
-        )["user"]["contributionsCollection"]["contributionCalendar"]
-        total += calendar["totalContributions"]
-        if len(shown) < YEARS_SHOWN:
-            levels = {
-                dt.date.fromisoformat(day["date"]): LEVELS[day["contributionLevel"]]
-                for week in calendar["weeks"]
-                for day in week["contributionDays"]
-            }
-            levels = {d: v for d, v in levels.items() if d.year == year and d <= today}
-            shown.append((year, calendar["totalContributions"], levels))
-    return total, min(years), shown
+def window(today: dt.date) -> dt.date:
+    """The graph's first day: 1 January, or 52 weeks back while the year is under eight weeks old."""
+    start = dt.date(today.year, 1, 1)
+    return start if (today - start).days >= 56 else today - dt.timedelta(weeks=52)
+
+
+def fetch(today: dt.date) -> tuple[dt.date, int, dict[dt.date, int]]:
+    """Return the window's first day, its contribution count and the level of every day in it."""
+    start = window(today)
+    calendar = graphql(
+        CALENDAR_QUERY,
+        {
+            "login": LOGIN,
+            "from": dt.datetime.combine(start, dt.time()).isoformat() + "Z",
+            "to": dt.datetime.combine(today, dt.time(23, 59, 59)).isoformat() + "Z",
+        },
+    )["user"]["contributionsCollection"]["contributionCalendar"]
+    levels = {
+        dt.date.fromisoformat(day["date"]): LEVELS[day["contributionLevel"]]
+        for week in calendar["weeks"]
+        for day in week["contributionDays"]
+    }
+    levels = {d: v for d, v in levels.items() if start <= d <= today}
+    return start, calendar["totalContributions"], levels
 
 
 # ---------------------------------------------------------------- fonts
@@ -351,117 +345,141 @@ def link(theme: str, index: int, slug: str, label: str) -> str:
     return svg(theme, css, body, ("switzer-500",), LINK_HEIGHT)
 
 
-# Each year is a strip of week columns. --p is the pitch (cell plus gap): 10px
-# when there is room, shrinking to fit narrower columns; the graph keeps the same
-# height at every width. Above 720px cells are 80% of the pitch. Below it the
-# cell and gap are rounded to whole pixels, because fractional cells of 3 to 6px
-# blur into stripes; below 400px the year labels move above the strips so each
-# strip gets the full width, and the pitch is capped at 5px so three strips fit.
-GRAPH_HEIGHT = 298
-SIDE, LABEL, LABEL_GAP, SIDE_GAP = 164, 48, 18, 24
+# The graph is one strip: a column per week from the window's first day to today, so
+# there are no empty future weeks, with month labels above it and the window's count
+# beside it. Cells grow to fill the width up to a cap; below 720px the count sits
+# above the strip, and cell and gap round to whole pixels so small cells stay crisp.
+GRAPH_HEIGHT = 196
+SIDE, SIDE_GAP = 164, 28
 
 
-def weeks(year: int) -> int:
-    """How many week columns the year spans: 53 for most years, 54 for a few."""
-    offset = dt.date(year, 1, 1).isoweekday() % 7
-    days = (dt.date(year + 1, 1, 1) - dt.date(year, 1, 1)).days
-    return -(-(offset + days) // 7)
+def columns(start: dt.date, today: dt.date) -> int:
+    """Week columns from the window's first day to today, weeks starting on Sunday."""
+    offset = start.isoweekday() % 7
+    return -(-(offset + (today - start).days + 1) // 7)
 
 
-def strip(year: int, levels: dict[dt.date, int]) -> str:
+def strip(start: dt.date, levels: dict[dt.date, int]) -> str:
     # Columns are weeks starting on Sunday, rows run Sunday to Saturday, as on GitHub.
-    first = dt.date(year, 1, 1)
-    cells = ['<i class="x"></i>'] * (first.isoweekday() % 7)
+    cells = ['<i class="x"></i>'] * (start.isoweekday() % 7)
     cells += [f'<i class="l{levels[day]}"></i>' for day in sorted(levels)]
     return "".join(cells)
 
 
-def graph(theme: str, today: dt.date, total: int, since: int, shown) -> str:
-    rows = [(year, count, levels) for year, count, levels in shown if levels]
-    label = LABEL + LABEL_GAP
-    n = max(weeks(year) for year, _, _ in rows)
+def months(start: dt.date, today: dt.date) -> str:
+    """Month labels placed on the week column where each month begins, never closer than three columns."""
+    offset, labels, last = start.isoweekday() % 7, [], -3
+    first = start if start.day == 1 else (start.replace(day=1) + dt.timedelta(days=32)).replace(day=1)
+    month = first
+    while month <= today:
+        column = (offset + (month - start).days) // 7
+        if column - last >= 3:
+            labels.append(f'<span class="mono" style="grid-column:{column + 1}/span 3">{month.strftime("%b")}</span>')
+            last = column
+        month = (month + dt.timedelta(days=32)).replace(day=1)
+    return "".join(labels)
+
+
+def graph(theme: str, today: dt.date, start: dt.date, count: int, levels: dict[dt.date, int]) -> str:
+    n = columns(start, today)
     span = n - 0.2  # strip width in pitches: n cells of .8 and n - 1 gaps of .2
+    title = f"Contributions in {today.year}" if start.month == 1 and start.day == 1 else "Contributions, past year"
     css = f"""
-.graph{{--pad:{cqw(PAD)};display:flex;gap:{SIDE_GAP}px;padding:30px var(--pad) 32px;border-radius:0 0 4px 4px}}
+.graph{{--pad:{cqw(PAD)};display:flex;align-items:center;gap:{SIDE_GAP}px;padding:28px var(--pad);border-radius:0 0 4px 4px}}
 .graph::before{{content:"";position:absolute;top:0;left:var(--pad);right:var(--pad);border-top:1px solid var(--line)}}
-.side{{flex:none;width:{SIDE}px;display:flex;flex-direction:column}}
+.side{{flex:none;width:{SIDE}px;align-self:stretch;display:flex;flex-direction:column}}
 .total{{margin-top:14px;font:400 44px/1 {SANS};letter-spacing:-.025em;color:var(--ink)}}
-.since{{margin-top:12px}}
 .foot{{margin-top:auto;display:flex;flex-direction:column;gap:12px}}
 .legend{{display:flex;align-items:center;gap:6px}}
 .legend .cells{{display:flex;gap:2px}}
 .legend i{{width:8px;height:8px;border-radius:2px}}
-.years{{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;
-  --p:min(10px, calc((100cqw - 2 * var(--pad) - {SIDE + SIDE_GAP + label}px) / {span:g}))}}
-.year{{display:flex;gap:{LABEL_GAP}px;justify-content:flex-end}}
-.label{{flex:none;width:{LABEL}px;display:flex;flex-direction:column;gap:8px}}
-.days{{--c:calc(var(--p) * .8);--g:calc(var(--p) * .2);flex:none;display:grid;grid-auto-flow:column;
+.chart{{flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+  --p:min(18px, calc((100cqw - 2 * var(--pad) - {SIDE + SIDE_GAP}px) / {span:g}))}}
+.chart>*{{--c:calc(var(--p) * .8);--g:calc(var(--p) * .2)}}
+.months{{display:grid;grid-template-columns:repeat({n},var(--c));column-gap:var(--g);width:calc(var(--c) * {n} + var(--g) * {n - 1})}}
+.days{{flex:none;display:grid;grid-auto-flow:column;
   grid-template-rows:repeat(7,var(--c));grid-auto-columns:var(--c);gap:var(--g);
   width:calc(var(--c) * {n} + var(--g) * {n - 1});height:calc(var(--c) * 7 + var(--g) * 6);
-  animation:wipe 1.8s cubic-bezier(.3,.6,.2,1) var(--d,0s) both}}
+  animation:wipe 1.8s cubic-bezier(.3,.6,.2,1) .9s both}}
 @keyframes wipe{{from{{clip-path:inset(0 100% 0 0)}}to{{clip-path:inset(0 0 0 0)}}}}
 i{{display:block;border-radius:calc(var(--c) * .28)}}
 .x{{visibility:hidden}}
 .l0{{background:var(--l0)}}.l1{{background:var(--l1)}}.l2{{background:var(--l2)}}
 .l3{{background:var(--l3)}}.l4{{background:var(--l4)}}
 @container (width < 720px){{
-  .graph{{flex-direction:column;gap:18px;padding:24px var(--pad) 26px}}
+  .graph{{flex-direction:column;align-items:stretch;justify-content:center;gap:16px;padding:22px var(--pad)}}
   .side{{width:auto;flex-direction:row;align-items:baseline;gap:12px}}
-  .total{{margin:0;font-size:28px}}
-  .since{{margin:0 0 0 auto}}
+  .total{{margin:0 0 0 auto;font-size:30px}}
   .foot{{display:none}}
-  .years{{justify-content:center;gap:12px;
-    --p:min(8.6px, calc((100cqw - 2 * var(--pad) - {label}px) / {span:g}))}}
-  .year{{justify-content:flex-start}}
-}}
-@container (width < 400px){{
-  .graph{{padding:22px var(--pad) 20px}}
-  .side{{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:10px 12px}}
-  .side>.gold{{grid-area:1/1}}
-  .since{{grid-area:1/2;margin:0}}
-  .total{{grid-area:2/1/3/3;font-size:36px}}
-  .years{{--p:min(5px, calc((100cqw - 2 * var(--pad)) / {span:g}))}}
-  .year{{flex-direction:column;gap:6px}}
-  .label{{width:auto;flex-direction:row;gap:10px}}
+  .chart{{align-items:flex-start;gap:8px;--p:min(14px, calc((100cqw - 2 * var(--pad)) / {span:g}))}}
+  .months .mono{{font-size:10px}}
+  .months .mono:nth-child(even){{visibility:hidden}}
 }}
 @supports (width:round(down, 5.5px, 1px)){{
   @container (width < 720px){{
-    .days{{--g:max(1px, round(var(--p) * .2, 1px));--c:round(down, var(--p) - var(--g), 1px)}}
+    .chart>*{{--g:max(1px, round(var(--p) * .2, 1px));--c:round(down, var(--p) - var(--g), 1px)}}
   }}
 }}
 """
-    years_html = "".join(
-        f'<div class="year"><div class="label in" style="--d:{0.9 + i * 0.15:.2f}s">'
-        f'<span class="mono gold">{year}</span><span class="mono">{count:,}</span></div>'
-        f'<div class="days" style="--d:{0.9 + i * 0.15:.2f}s">{strip(year, levels)}</div></div>'
-        for i, (year, count, levels) in enumerate(rows)
-    )
     legend = "".join(f'<i class="l{i}"></i>' for i in range(5))
     body = (
         '<div class="panel graph">'
         '<div class="side in" style="--d:.8s">'
-        '<p class="mono gold">Contributions</p>'
-        f'<p class="total">{total:,}</p>'
-        f'<p class="mono since">Since {since}</p>'
+        f'<p class="mono gold">{title}</p>'
+        f'<p class="total">{count:,}</p>'
         '<div class="foot">'
         f'<div class="mono legend">Less<span class="cells">{legend}</span>More</div>'
         f'<p class="mono">Updated {today.day} {today.strftime("%b %Y")}</p>'
         "</div></div>"
-        f'<div class="years">{years_html}</div>'
+        f'<div class="chart in" style="--d:.9s"><div class="months">{months(start, today)}</div>'
+        f'<div class="days">{strip(start, levels)}</div></div>'
         "</div>"
     )
     return svg(theme, css, body, ("switzer-400", "mono"), GRAPH_HEIGHT)
 
 
+# ---------------------------------------------------------------- sections
+
+# Section headings for the README body, as on the atoms vision page: a hairline, the
+# title in gold, its number in mono on the right. Transparent, so they sit on GitHub's
+# own page colour; the text colours come from the same tokens as the header.
+SECTION_HEIGHT = 64
+SECTIONS = [
+    ("work", "What I work on"),
+    ("open-source", "Open source"),
+    ("upstream", "Merged upstream"),
+    ("writing", "Writing"),
+    ("contact", "Get in touch"),
+]
+
+
+def section(theme: str, index: int, title: str) -> str:
+    css = """
+.head{position:relative;width:100%;height:100%;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 0 12px;border-bottom:1px solid var(--line);font:400 26px/1 """ + SANS + """;letter-spacing:-.02em;color:var(--accent);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.head .mono{color:var(--accent);padding-bottom:4px}
+@container (width < 400px){.head{font-size:22px}}
+"""
+    body = f'<div class="head"><span>{html.escape(title)}</span><span class="mono">{index:02d}</span></div>'
+    return svg(theme, css, body, ("switzer-400", "mono"), SECTION_HEIGHT)
+
+
 def build(today: dt.date | None = None) -> None:
     today = today or dt.datetime.now(dt.timezone.utc).date()
-    total, since, shown = fetch(today)
+    start, count, levels = fetch(today)
     for theme in THEMES:
         (OUT / f"hero-{theme}.svg").write_text(hero(theme))
         for index, (slug, label) in enumerate(LINKS):
             (OUT / f"link-{slug}-{theme}.svg").write_text(link(theme, index, slug, label))
-        (OUT / f"graph-{theme}.svg").write_text(graph(theme, today, total, since, shown))
-    print(f"{total} contributions since {since}, {len(shown)} years drawn, written to {OUT}")
+        (OUT / f"graph-{theme}.svg").write_text(graph(theme, today, start, count, levels))
+        for index, (slug, title) in enumerate(SECTIONS, 1):
+            (OUT / f"section-{slug}-{theme}.svg").write_text(section(theme, index, title))
+    keep = {f"section-{slug}-{theme}.svg" for slug, _ in SECTIONS for theme in THEMES}
+    for old in OUT.glob("section-*.svg"):
+        if old.name not in keep:
+            old.unlink()
+    print(f"{count} contributions since {start}, {len(levels)} days drawn, written to {OUT}")
 
 
 if __name__ == "__main__":
