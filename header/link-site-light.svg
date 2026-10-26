@@ -10,7 +10,7 @@
 @keyframes in{from{opacity:0}to{opacity:1}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}}
 
-.col{position:absolute;top:0;bottom:0;left:11.5663cqw;width:88.4337cqw;
+.col{position:absolute;top:0;bottom:0;left:5.7831cqw;width:88.4337cqw;
   display:flex;align-items:center;gap:5px;border-top:1px solid var(--line);
   font:500 16px/1 Switzer,"Helvetica Neue",Arial,sans-serif;letter-spacing:-.01em;white-space:nowrap}
 .arrow{width:12px;height:12px;flex:none;margin-top:1px}
@@ -18,4 +18,4 @@
 @container (width < 170px){.col{font-size:13px;gap:4px}.arrow{width:10px;height:10px}.mark{width:12px;height:12px}}
 @container (width < 100px){.col{font-size:12px;gap:3px;letter-spacing:-.02em}.arrow{width:9px;height:9px}.mark{width:11px;height:11px}}
 @container (width < 92px){.arrow{display:none}}
-]]></style><div class="panel"><div class="col in" style="--d:0.50s"><span>anishfyi.com</span><svg xmlns="http://www.w3.org/2000/svg" class="arrow" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div></foreignObject></svg>
+]]></style><div class="panel"><div class="col in" style="--d:0.57s"><span>anishfyi.com</span><svg xmlns="http://www.w3.org/2000/svg" class="arrow" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div></div></foreignObject></svg>

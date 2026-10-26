@@ -56,16 +56,16 @@ COLUMN_GAP = 16 / DESIGN_WIDTH
 
 NAME = "Anish Kr Singh"
 INTRO = (
-    "I build backend systems and tools for artificial intelligence (AI), and I "
-    "co-founded Velofy, an applied AI and security lab in Delhi."
+    "Infrastructure engineer at Chert, Y Combinator P26. We build AI that people "
+    "can text, call and FaceTime."
 )
 LABEL_LEFT = "README.MD"
-LABEL_RIGHT = "Gurugram, India"
+LABEL_RIGHT = "Delhi, India"
 
 # (slug, label). Three to a row; README.md holds the matching links.
 LINKS = [
+    ("chert", "Chert · YC P26"),
     ("site", "anishfyi.com"),
-    ("velofy", "Velofy"),
     ("linkedin", "LinkedIn"),
     ("x", "X"),
     ("call", "Book a call"),
@@ -335,7 +335,7 @@ def link(theme: str, index: int, slug: str, label: str) -> str:
 @container (width < 100px){{.col{{font-size:12px;gap:3px;letter-spacing:-.02em}}.arrow{{width:9px;height:9px}}.mark{{width:11px;height:11px}}}}
 @container (width < 92px){{.arrow{{display:none}}}}
 """
-    mark = MARK if slug == "velofy" else ""
+    mark = ""
     body = (
         '<div class="panel">'
         f'<div class="col in" style="--d:{0.5 + index * 0.07:.2f}s">{mark}'
@@ -469,7 +469,7 @@ def build(today: dt.date | None = None) -> None:
     today = today or dt.datetime.now(dt.timezone.utc).date()
     start, count, levels = fetch(today)
     for theme in THEMES:
-        (OUT / f"hero-{theme}.svg").write_text(hero(theme))
+        (OUT / f"intro-{theme}.svg").write_text(hero(theme))
         for index, (slug, label) in enumerate(LINKS):
             (OUT / f"link-{slug}-{theme}.svg").write_text(link(theme, index, slug, label))
         (OUT / f"graph-year-{theme}.svg").write_text(graph(theme, today, start, count, levels))
